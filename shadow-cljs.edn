@@ -1,0 +1,11 @@
+{:source-paths
+ ["src"]
+
+ :dependencies
+ []
+
+ :builds
+ {:app {:target :node-script
+        :main app.main/run
+        :output-to "dist/app.js"}}
+ }
