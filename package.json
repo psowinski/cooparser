@@ -2,8 +2,13 @@
   "name": "cooparser",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "start": "shadow-cljs compile app && node dist/app.js"
+  },
   "devDependencies": {
     "shadow-cljs": "2.11.6"
   },
-  "dependencies": {}
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3"
+  }
 }
