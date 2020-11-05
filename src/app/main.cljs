@@ -1,5 +1,5 @@
 (ns app.main
-  (:require [fs :refer (readdirSync readFileSync)]
+  (:require [fs :refer (readdirSync readFileSync writeFileSync)]
             [path]
             [cheerio]
             [clojure.string :as str]))
@@ -18,9 +18,9 @@
 
 (defn get-icons [doc]
   (let [^js/Cheerio icons (->> (doc "div[class='qv-info-icons'] > div > p")
-                              cheerio->array
-                              (take 5)
-                              (map get-text))]
+                               cheerio->array
+                               (take 5)
+                               (map get-text))]
     {:preperation (nth icons 0)
      :total (nth icons 1)
      :portion (nth icons 2)
@@ -48,17 +48,16 @@
     "icon-dough-mode" "wyrabianie ciasta"
     "icon-reverse" "obroty wsteczne"
     "icon-stirring" "mieszanie"
-    (throw (str "NIEZNANY SYMBOL: " name)))
-  )
+    (throw (str "NIEZNANY SYMBOL: " name))))
 
 (defn fill-symbol-text [symbol name]
   (.text symbol (str "(" (recognize-symbol-name name) ")"))
   symbol)
 
 (defn convert-symbol [symbol]
-    (let [class (.attr ^js/Cheerio symbol "class")
-          name (subs class 5)]
-      (fill-symbol-text symbol name)))
+  (let [class (.attr ^js/Cheerio symbol "class")
+        name (subs class 5)]
+    (fill-symbol-text symbol name)))
 
 (defn recognize-symbols [span]
   (let [icons (cheerio->array (.find span ".icon"))]
@@ -89,15 +88,12 @@
 (defn get-ingridients-group [group]
   (let [ingridients (cheerio->array (.find group "ul > li"))]
     {:name (get-group-name group)
-     :list (get-ingridients-list ingridients)
-     }))
+     :list (get-ingridients-list ingridients)}))
 
 (defn get-preperation-group [group]
   (let [steps (cheerio->array (.find group "ol > li"))]
     {:name (get-group-name group)
-     :list (get-preperation-list steps)
-     }
-    ))
+     :list (get-preperation-list steps)}))
 
 (defn get-ingridients [doc]
   (let [groups (cheerio->array (doc "#qv-ingredient-section > div > div > div"))]
@@ -107,17 +103,28 @@
   (let [groups (cheerio->array (doc "#qv-preparation-section > div > div[class='recipe-step-groups']"))]
     (map get-preperation-group groups)))
 
-(defn scanRecipe [doc]
-  (into [] (-> {:name (get-title doc)
-                :summary (get-icons doc)
-                :ingridients (get-ingridients doc)
-                :preperation (get-preperation doc)
-                :nutritional (get-nutritional doc)})))
+(defn extract-image [content title]
+  (let [from (str/index-of content "savepage_PageLoader")
+        start (+ (str/index-of content "resourceBase64Data[8] =" from) 25)
+        end (str/index-of content "\";" start)
+        image (subs content start end)
+        fileName (str (str/replace title #"[/\\?%*:|<>]" "-") ".jpg")]
+    (writeFileSync (str "s:\\cimg\\" fileName) image "base64")
+    fileName))
+
+(defn scanRecipe [doc content]
+  (let [title (get-title doc)]
+    {:name title
+     :summary (get-icons doc)
+     :ingridients (get-ingridients doc)
+     :preperation (get-preperation doc)
+     :nutritional (get-nutritional doc)
+     :image (extract-image content title)}))
 
 (defn scan [content]
   (let [doc (cheerio/load content)]
     (if (isRecipe doc)
-      (scanRecipe doc) ())))
+      (scanRecipe doc content) ())))
 
 (defn readRecipes [path book]
   (let [recipes (readdirSync path)]
@@ -131,8 +138,8 @@
                (readRecipes (path/resolve path book) book)))))
 
 (defn procRecipe [recipe]
-  (let [content (readFileSync (:file recipe))]
-    (prn (scan content))))
+  (let [content (readFileSync (:file recipe) "utf8")]
+    (scan content)))
 
 (defn show-progress [idx cnt]
   (if (= (rem (dec idx) 10) 0) (prn (str "Processing " idx "/" cnt)) ()))
@@ -141,6 +148,6 @@
   (let [path (first args)
         recipes (map-indexed vector (readBooks path))
         cnt (count recipes)]
-    (doseq [[idx recipe] (take 2 recipes)]
+    (doseq [[idx recipe] (take 20 recipes)]
       (show-progress idx cnt)
-      (procRecipe recipe))))
+      (prn (procRecipe recipe)))))
