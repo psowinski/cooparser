@@ -1,10 +1,11 @@
 (ns app.main
   (:require [fs :refer (readdirSync readFileSync writeFileSync)]
-            [path]
+            [path :rename {resolve path-resolve}]
             [cheerio]
             [clojure.string :as str]
             [app.tools :as tools]
-            [app.symbols :as symbols]))
+            [app.symbols :as symbols]
+            [app.image :as image]))
 
 (defn is-recipe [doc]
   (let [titleNode (doc "h1[class='qv-recipe-head']")
@@ -66,16 +67,6 @@
   (let [groups (tools/cheerio->array (doc "#qv-preparation-section > div > div[class='recipe-step-groups']"))]
     (map get-preperation-group groups)))
 
-(defn extract-recipe-image [content name]
-  (let [from (str/index-of content "savepage_PageLoader")
-        start (+ (str/index-of content "resourceBase64Data[8] =" from) 25)
-        end (str/index-of content "\";" start)
-        image (subs content start end)
-        file-name (str (tools/correct-file-name name) ".jpg")]
-    ;(writeFileSync (str "s:\\cimg\\" fileName) image "base64")
-    {:image-name file-name
-     :image-data "image"}))
-
 (defn extract-recipe [doc]
   (let [name (get-name doc)]
     {:name name
@@ -86,7 +77,7 @@
 
 (defn scan-recipe [doc content]
   (let [recipe (extract-recipe doc)
-        image (extract-recipe-image content (:name recipe))]
+        image (image/extract-recipe-image content (:name recipe))]
     (conj recipe image)))
 
 (defn scan [content]
@@ -98,7 +89,7 @@
   (let [recipes (readdirSync path)]
     (for [recipe recipes]
       {:book book
-       :file (path/resolve path recipe)})))
+       :file (path-resolve path recipe)})))
 
 (defn process-recipe [recipe]
   (scan (readFileSync (:file recipe) "utf8")))
@@ -106,15 +97,12 @@
 (defn read-books [path]
   (let [books (readdirSync path)]
     (flatten (for [book books]
-               (read-recipes (path/resolve path book) book)))))
-
-(defn show-progress [idx cnt]
-  (if (= (rem (dec idx) 10) 0) (prn (str "Processing " idx "/" cnt)) ()))
+               (read-recipes (path-resolve path book) book)))))
 
 (defn run [& args]
   (let [path (first args)
         recipes (map-indexed vector (read-books path))
         cnt (count recipes)]
     (doseq [[idx recipe] (take 20 recipes)]
-      (show-progress idx cnt)
+      (tools/show-progress idx cnt)
       (prn (process-recipe recipe)))))

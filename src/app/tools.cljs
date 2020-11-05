@@ -14,3 +14,8 @@
 
 (defn correct-file-name [name]
   (str/replace name #"[/\\?%*:|<>]" "-"))
+
+(defn show-progress [idx cnt]
+  (if (= 0 (rem (dec idx) 10)) 
+    (prn (str "Processing " idx "/" cnt))
+    nil))
