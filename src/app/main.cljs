@@ -21,10 +21,13 @@
 (defn process-recipe [recipe]
   (scan (access/load-recipe-file (:file recipe)) (:book-name recipe)))
 
+(defn prn-recipe [recipe]
+  (prn (dissoc recipe :image-data)))
+
 (defn run [& args]
   (let [path (first args)
         recipes (access/get-recipes-list path)
         cnt (count recipes)]
-    (doseq [[idx recipe] (take 20 recipes)]
+    (doseq [[idx recipe] (take 2 recipes)]
       (tools/show-progress idx cnt)
-      (prn (process-recipe recipe)))))
+      (prn-recipe (process-recipe recipe)))))

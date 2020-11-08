@@ -12,7 +12,7 @@
         image (subs content start end)
         file-name (str (tools/correct-file-name name) ".jpg")]
     {:image-file-name file-name
-     :image-data "image"}))
+     :image-data image}))
 
 (defn save-image [path img]
   (writeFileSync (path-resolve path (:image-file-name img)) (:image-data img) "base64"))
