@@ -1,49 +1,46 @@
 (ns app.recipe
   (:require
    [cheerio]
-   [app.tools :as tools]
+   [app.tools :as t]
    [app.symbols :as symbols]))
 
-(defn is-recipe-document [doc]
-  (let [titleNode (doc "h1[class='qv-recipe-head']")
-        cnt (.-length titleNode)]
-    (> cnt 0)))
+(defn is-recipe-document [root]
+  (t/element-exist root "h1[class='qv-recipe-head']"))
 
-(defn get-icons [doc]
-  (let [^js/Cheerio icons (->> (tools/doc-elements 
-                                doc "div[class='qv-info-icons'] > div > p")
-                               (map tools/get-text))]
+(defn get-icons [root]
+  (let [icons (->> (t/find-elements
+                    root "div[class='qv-info-icons'] > div > p")
+                   (map t/get-text))]
     {:preperation (nth icons 0)
      :total (nth icons 1)
      :portion (nth icons 2)
      :dificulty (nth icons 3)
      :favourite (nth icons 4)}))
 
-(defn get-nutritional [doc]
-  (let [^js/Cheerio section (doc "#qv-nutritional-section > div > div")
-        ^js/Cheerio per-unit (-> (tools/find-element section "p")
-                                 tools/get-text)
-        ^js/Cheerio vlaues (->> (tools/find-elements section "div[class='nutritional-values'] > div > span")
-                                (map tools/get-text))]
+(defn get-nutritional [root]
+  (let [section (t/find-element root "#qv-nutritional-section > div > div")
+        per-unit (t/get-text (t/find-element section "p"))
+        vlaues (->> (t/find-elements section "div[class='nutritional-values'] > div > span")
+                    (map t/get-text))]
     {:per per-unit
      :energy (nth vlaues 0)
      :protein (nth vlaues 1)
      :carb (nth vlaues 2)
      :fat (nth vlaues 3)}))
 
-(defn get-name [doc]
-  (-> (.root doc) (tools/find-element "h1[class='qv-recipe-head'] > span") tools/get-text))
+(defn get-name [root]
+  (t/get-text (t/find-element root "h1[class='qv-recipe-head'] > span")))
 
 (defn get-recipe-row [row]
-  (->> (tools/find-elements row "span")
+  (->> (t/find-elements row "span")
        (map symbols/update-symbols)
-       (map tools/get-text)))
+       (map t/get-text)))
 
 (defn get-group-name [group]
-  (-> (tools/find-element group "h4") tools/get-text))
+  (t/get-text (t/find-element group "h4")))
 
 (defn get-recipe-group [group row-name]
-  (let [rows (tools/find-elements group row-name)]
+  (let [rows (t/find-elements group row-name)]
     {:name (get-group-name group)
      :list (map get-recipe-row rows)}))
 
@@ -53,21 +50,21 @@
 (defn get-preperation-group [group]
   (get-recipe-group group "ol > li"))
 
-(defn get-ingridients [doc]
-  (let [groups (tools/doc-elements
-                doc "#qv-ingredient-section > div > div > div")]
+(defn get-ingridients [root]
+  (let [groups (t/find-elements
+                root "#qv-ingredient-section > div > div > div")]
     (map get-ingridients-group groups)))
 
-(defn get-preperation [doc]
-  (let [groups (tools/doc-elements 
-                doc 
+(defn get-preperation [root]
+  (let [groups (t/find-elements
+                root
                 "#qv-preparation-section > div > div[class='recipe-step-groups']")]
     (map get-preperation-group groups)))
 
-(defn extract-recipe [doc]
-  (let [name (get-name doc)]
+(defn extract-recipe [root]
+  (let [name (get-name root)]
     {:name name
-     :summary (get-icons doc)
-     :ingridients (get-ingridients doc)
-     :preperation (get-preperation doc)
-     :nutritional (get-nutritional doc)}))
+     :summary (get-icons root)
+     :ingridients (get-ingridients root)
+     :preperation (get-preperation root)
+     :nutritional (get-nutritional root)}))

@@ -13,9 +13,10 @@
     (conj book recipe image)))
 
 (defn scan [content book-name]
-  (let [doc (load-html content)]
-    (if (recipe/is-recipe-document doc)
-      (scan-recipe doc content book-name) nil)))
+  (let [doc (load-html content)
+        root (.root doc)]
+    (if (recipe/is-recipe-document root)
+      (scan-recipe root content book-name) nil)))
 
 (defn process-recipe [recipe]
   (scan (access/load-recipe-file (:file recipe)) (:book-name recipe)))

@@ -12,6 +12,15 @@
 (defn get-attr [^js/Cheerio node name]
   (-> (.attr node name) str/trim))
 
+(defn find-element [^js/Cheerio element to-find]
+  (.first (.find element to-find)))
+
+(defn find-elements [^js/Cheerio element to-find]
+  (cheerio->array (.find element to-find)))
+
+(defn element-exist [^js/Cheerio element to-find]
+  (> (.-length (.find element to-find)) 0))
+
 (defn correct-file-name [name]
   (str/replace name #"[/\\?%*:|<>]" "-"))
 
@@ -19,12 +28,3 @@
   (if (= 0 (rem (dec idx) 10)) 
     (prn (str "Processing " idx "/" cnt))
     nil))
-
-(defn find-element [element to-find]
-  (.first (.find element to-find)))
-
-(defn find-elements [element to-find]
-  (cheerio->array (.find element to-find)))
-
-(defn doc-elements [doc to-find]
-  (cheerio->array (doc to-find)))
