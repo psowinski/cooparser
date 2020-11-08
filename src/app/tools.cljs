@@ -19,3 +19,12 @@
   (if (= 0 (rem (dec idx) 10)) 
     (prn (str "Processing " idx "/" cnt))
     nil))
+
+(defn find-element [element to-find]
+  (.first (.find element to-find)))
+
+(defn find-elements [element to-find]
+  (cheerio->array (.find element to-find)))
+
+(defn doc-elements [doc to-find]
+  (cheerio->array (doc to-find)))

@@ -10,9 +10,8 @@
     (> cnt 0)))
 
 (defn get-icons [doc]
-  (let [^js/Cheerio icons (->> (doc "div[class='qv-info-icons'] > div > p")
-                               tools/cheerio->array
-                               (take 5)
+  (let [^js/Cheerio icons (->> (tools/doc-elements 
+                                doc "div[class='qv-info-icons'] > div > p")
                                (map tools/get-text))]
     {:preperation (nth icons 0)
      :total (nth icons 1)
@@ -22,10 +21,9 @@
 
 (defn get-nutritional [doc]
   (let [^js/Cheerio section (doc "#qv-nutritional-section > div > div")
-        ^js/Cheerio per-unit (-> (.find section "p") .first tools/get-text)
-        ^js/Cheerio vlaues (->> (.find section "div[class='nutritional-values'] > div > span")
-                                tools/cheerio->array
-                                (take 4)
+        ^js/Cheerio per-unit (-> (tools/find-element section "p")
+                                 tools/get-text)
+        ^js/Cheerio vlaues (->> (tools/find-elements section "div[class='nutritional-values'] > div > span")
                                 (map tools/get-text))]
     {:per per-unit
      :energy (nth vlaues 0)
@@ -34,19 +32,18 @@
      :fat (nth vlaues 3)}))
 
 (defn get-name [doc]
-  (-> (doc "h1[class='qv-recipe-head'] > span") .first tools/get-text))
+  (-> (.root doc) (tools/find-element "h1[class='qv-recipe-head'] > span") tools/get-text))
 
 (defn get-recipe-row [row]
-  (->> (.find row "span")
-       tools/cheerio->array
+  (->> (tools/find-elements row "span")
        (map symbols/update-symbols)
        (map tools/get-text)))
 
 (defn get-group-name [group]
-  (-> (.find group "h4") tools/get-text))
+  (-> (tools/find-element group "h4") tools/get-text))
 
 (defn get-recipe-group [group row-name]
-  (let [rows (tools/cheerio->array (.find group row-name))]
+  (let [rows (tools/find-elements group row-name)]
     {:name (get-group-name group)
      :list (map get-recipe-row rows)}))
 
@@ -57,11 +54,14 @@
   (get-recipe-group group "ol > li"))
 
 (defn get-ingridients [doc]
-  (let [groups (tools/cheerio->array (doc "#qv-ingredient-section > div > div > div"))]
+  (let [groups (tools/doc-elements
+                doc "#qv-ingredient-section > div > div > div")]
     (map get-ingridients-group groups)))
 
 (defn get-preperation [doc]
-  (let [groups (tools/cheerio->array (doc "#qv-preparation-section > div > div[class='recipe-step-groups']"))]
+  (let [groups (tools/doc-elements 
+                doc 
+                "#qv-preparation-section > div > div[class='recipe-step-groups']")]
     (map get-preperation-group groups)))
 
 (defn extract-recipe [doc]
