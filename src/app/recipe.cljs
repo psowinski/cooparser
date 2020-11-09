@@ -20,13 +20,15 @@
 (defn get-nutritional [root]
   (let [section (t/find-element root "#qv-nutritional-section > div > div")
         per-unit (t/get-text (t/find-element section "p"))
-        vlaues (->> (t/find-elements section "div[class='nutritional-values'] > div > span")
+        values (->> (t/find-elements section "div[class='nutritional-values'] > div > span")
                     (map t/get-text))]
-    {:per per-unit
-     :energy (nth vlaues 0)
-     :protein (nth vlaues 1)
-     :carb (nth vlaues 2)
-     :fat (nth vlaues 3)}))
+    (if (>= (count values) 4)
+      {:per per-unit
+       :energy (nth values 0)
+       :protein (nth values 1)
+       :carb (nth values 2)
+       :fat (nth values 3)}
+      nil)))
 
 (defn get-name [root]
   (t/get-text (t/find-element root "h1[class='qv-recipe-head'] > span")))

@@ -28,5 +28,6 @@
 
 (defn run [in-path out-path &args]
   (let [files (access/get-recipes-list in-path)
-        result (into () (process-files (take 5 files) out-path))]
+        processed (into () (process-files (take 300 files) out-path))
+        result (reverse (filter some? processed))]
     (access/save-result out-path result)))
