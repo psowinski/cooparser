@@ -9,14 +9,12 @@
 
 (defn extract-recipe [doc content book-name]
   (let [recipe (recipe/extract-recipe doc)
-        image (image/extract-recipe-image content (:name recipe))
-        book {:book book-name}]
-    (conj book recipe image)))
+        image (image/extract-recipe-image content (:name recipe))]
+    (conj {:book book-name} recipe image)))
 
 (defn export-recipe [file img-path]
   (let [content (access/load-recipe-file file)
-        doc (load-html content)
-        root (.root doc)]
+        root (.root (load-html content))]
     (when (recipe/is-recipe-document root)
       (let [recipe (extract-recipe root content (:book-name file))]
         (image/save-recipe-image img-path recipe)
@@ -28,8 +26,7 @@
       (do (tools/show-progress idx cnt)
           (export-recipe file out-path)))))
 
-(defn run [& args]
-  (let [in-path (first args)
-        out-path (second args)
-        files (access/get-recipes-list in-path)]
-    (prn (into () (process-files (take 5 files) out-path)))))
+(defn run [in-path out-path &args]
+  (let [files (access/get-recipes-list in-path)
+        result (into () (process-files (take 5 files) out-path))]
+    (access/save-result out-path result)))

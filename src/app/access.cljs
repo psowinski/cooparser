@@ -1,5 +1,5 @@
 (ns app.access
-  (:require [fs :refer (readdirSync readFileSync)]
+  (:require [fs :refer (readdirSync readFileSync writeFileSync existsSync mkdirSync)]
             [path :rename {resolve path-resolve}]))
 
 (defn read-book-recipes [path book-name]
@@ -18,3 +18,10 @@
 
 (defn get-recipes-list [path]
   (map-indexed vector (read-books-dir path)))
+
+(defn save-result [out-path data]
+  (let [file-path (path-resolve out-path "cook.json")
+        json (js/JSON.stringify (clj->js data))]
+    (when-not (existsSync out-path) (mkdirSync out-path (clj->js {:recursive true})))
+    (writeFileSync file-path json)))
+
