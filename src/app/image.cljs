@@ -1,7 +1,7 @@
 (ns app.image
   (:require [app.tools :as tools]
             [clojure.string :as str]
-            [fs :refer (writeFileSync)]
+            [fs :refer (writeFileSync existsSync mkdirSync)]
             [path :rename {resolve path-resolve}]))
 
 (defn extract-recipe-image [content name]
@@ -14,5 +14,13 @@
     {:image-file-name file-name
      :image-data image}))
 
-(defn save-image [path img]
-  (writeFileSync (path-resolve path (:image-file-name img)) (:image-data img) "base64"))
+(defn remove-recipe-image-data [recipe]
+  (dissoc recipe :image-data))
+
+(defn save-recipe-image [out-path recipe]
+  (let [file-name (:image-file-name recipe)
+        dir-path (path-resolve out-path "img")
+        file-path (path-resolve dir-path file-name)
+        data (:image-data recipe)]
+  (when-not (existsSync dir-path) (mkdirSync dir-path))
+  (writeFileSync file-path data "base64")))
