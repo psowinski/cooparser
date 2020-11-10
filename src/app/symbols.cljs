@@ -6,6 +6,7 @@
     "icon-dough-mode" "(wyrabianie ciasta)"
     "icon-reverse" "(obroty wsteczne)"
     "icon-stirring" "(mieszanie)"
+    "icon-lid-closed" "(zamknięta pokrywa)"
     (throw (str "(NIEZNANY SYMBOL: " name ")"))))
 
 (defn update-symbol-text [symbol name]
