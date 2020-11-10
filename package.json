@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "shadow-cljs compile app && node dist/app.js"
+    "start": "shadow-cljs compile app && node --max-old-space-size=4096 --expose-gc dist/app.js"
   },
   "devDependencies": {
     "shadow-cljs": "2.11.6"

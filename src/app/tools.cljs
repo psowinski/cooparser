@@ -22,9 +22,11 @@
   (> (.-length (.find element to-find)) 0))
 
 (defn correct-file-name [name]
-  (str/replace name #"[/\\?%*:|<>]" "-"))
+  (str/replace name #"[/\\?%*:|<>\"]" "-"))
 
-(defn show-progress [idx cnt]
-  (if (= 0 (rem (dec idx) 10)) 
-    (prn (str "Processing " idx "/" cnt))
-    nil))
+(defn show-progress [idx cnt file]
+  (prn (str "Processing " idx "/" cnt " - " (:file-path file))))
+
+(defn release-memory [idx]
+  (when (= 0 (rem (dec idx) 50))
+    (js/global.gc)))

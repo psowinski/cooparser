@@ -28,7 +28,7 @@
        :protein (nth values 1)
        :carb (nth values 2)
        :fat (nth values 3)}
-      nil)))
+      (prn "Warning: missing nutritional"))))
 
 (defn get-name [root]
   (t/get-text (t/find-element root "h1[class='qv-recipe-head'] > span")))
